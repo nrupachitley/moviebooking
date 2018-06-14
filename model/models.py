@@ -9,7 +9,7 @@ class moviedetails(Base):
     genre = Column(String(200), unique=True)
     price = Column(DOUBLE, unique=True)
     popularity_index = Column(Integer, unique=True)
-    run_lengt_in_minutes = Column(Integer, unique=True)
+    run_length_in_minutes = Column(Integer, unique=True)
 
     def __init__(self, movie_id, movie_name, genre, price, popularity_index, run_lengt_in_minutes):
         self.movie_id = movie_id
@@ -17,4 +17,4 @@ class moviedetails(Base):
         self.genre = genre
         self.price = price
         self.popularity_index = popularity_index
-        self.run_lengt_in_minutes = run_lengt_in_minutes
+        self.run_length_in_minutes = run_length_in_minutes
