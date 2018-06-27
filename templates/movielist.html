@@ -1,10 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: black;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Add padding to containers */
+.container {
+    padding: 16px;
+    background-color: white;
+}
+
+/* Full-width input fields */
+input[type=text] {
+    width: 100%;
+    padding: 15px;
+    margin: 5px 0 22px 0;
+    display: inline-block;
+    border: none;
+    background: #f1f1f1;
+}
+
+input[type=text]:focus {
+    background-color: #ddd;
+    outline: none;
+}
+
+/* Overwrite default styles of hr */
+hr {
+    border: 1px solid #f1f1f1;
+    margin-bottom: 25px;
+}
+
+/* Set a style for the submit button */
+.registerbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    opacity: 0.9;
+}
+
+.registerbtn:hover {
+    opacity: 1;
+}
+
+/* Add a blue text color to links */
+a {
+    color: dodgerblue;
+}
+
+/* Set a grey background color and center the text of the "sign in" section */
+.signin {
+    background-color: #f1f1f1;
+    text-align: center;
+}
+
+table {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2;}
+
+tr:hover {background-color: #ddd;}
+
+th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: center;
+    background-color: #4CAF50;
+    color: white;
+}
+
+#moviename {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: center;
+    background-color: #924caf;
+    color: white;
+}
+
+</style>
 </head>
 <body>
-    <h1>Hi there!</h1>
+<div class="container">
+    <form action="{{ url_for('book_movie') }}" method="post" id="movieform"></form>
+   <table>
+        {% for movie_name in data_movie.keys() %}
+       <table>
+            <tr>
+                <th id="moviename"> Movie Name </th>
+            </tr>
+            <tr>
+                <td align="center"><b>{{ movie_name }}</b></td>
+            </tr>
+            <tr>
+                <table>
+                    <tr>
+                    <th>Theater Name</th>
+                    <th>Show Timings</th>
+                    <th>Action</th>
+                    </tr>
+                    {% for theater in data_movie[movie_name].keys() %}
+                    <tr>
+                        <td><input type="hidden" form="movieform" name="theater_name">{{ theater }}</td>
+                        <td>
+                            <table>
+                                <select form="movieform" name="show_timings">
+                                    {% for time in data_movie[movie_name][theater] %}
+                                    <option value={{ time }} name="screen_time" >{{ time }}</option>
+                                    {% endfor %}
+                                </select>
+                            </table>
+                        </td>
+                        <td><input type="submit" class="registerbtn" form="movieform"/></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </tr>
+       </table>
+        {% endfor %}
+   </table>
+</div>
 </body>
 </html>

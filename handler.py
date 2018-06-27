@@ -19,12 +19,13 @@ app.config['MYSQL_DATABASE_PORT'] = 3306
 mysql.init_app(app)
 
 
-# @app.route("/try", methods=["GET", "POST"])
-# def temp():
-#     email = request.args.get('email', '')
-#     # return jsonify(email)
-#     a, b = controllers.control.admin_control(email)
-#     print(a, b)
+@app.route("/try", methods=["GET", "POST"])
+def temp():
+    login_id = request.args.get('l', '')
+    data, flag = controllers.control.admin_control(login_id)
+    return render_template('movielist.html', data_movie=data)
+    # t = controllers.control.admin_control()
+    # return jsonify(t)
 
 @app.route("/")
 def hello():
@@ -77,7 +78,7 @@ def add_new_movie():
         run_time_in_minutes = int(request.form['run_time_in_minutes'])
         theater_number = int(request.form['theater_number'])
         show_timing = request.form['show_timing']
-        screen_id = int(request.form['screen_id'])
+        screen_id = request.form['screen_id']
         release_date = request.form['release_date']
         end_date = request.form['end_date']
     else:
@@ -87,22 +88,28 @@ def add_new_movie():
         price = float(request.args.get('price', ''))
         run_time_in_minutes = int(request.args.get('run_time_in_minutes', ''))
         theater_number = int(request.args.get('theater_number', ''))
-        screen_id = int(request.args.get('screen_id', ''))
+        screen_id = request.args.get('screen_id', '')
         show_timing = request.args.get('show_timing', '')
         release_date = request.args.get('release_date', '')
         end_date = request.args.get('end_date', '')
 
-    try:
-        show_time_object = (datetime.strptime(show_timing, '%I:%M%p')).time()
-    except ValueError:
-        return bad_request(show_timing)
+
+    show_time_list = show_timing.split(',')
+    show_time_object_list = []
 
     try:
-        release_date_object = (datetime.strptime(release_date, '%b %d %Y')).date()
+        for time in show_time_list:
+            time_object = (datetime.strptime(time, '%H:%M:%S'))
+            show_time_object_list.append(time_object)
+    except ValueError:
+        return bad_request(time)
+
+    try:
+        release_date_object = (datetime.strptime(release_date, '%Y-%m-%d'))
     except ValueError:
         return bad_request(release_date)
     try:
-        end_date_object = (datetime.strptime(end_date, '%b %d %Y')).date()
+        end_date_object = (datetime.strptime(end_date, '%Y-%m-%d'))
     except ValueError:
         return bad_request(end_date)
 
@@ -126,9 +133,10 @@ def add_new_movie():
 
     if screen_id <= 0:
         return bad_request(screen_id)
+    screen_id_list = screen_id.split(',')
 
-    controllers.control.add_items(movie_id, movie_name, genre, price, run_time_in_minutes, theater_number, screen_id,
-                                  show_time_object, release_date_object, end_date_object)
+    controllers.control.add_items(movie_id, movie_name, genre, price, run_time_in_minutes, theater_number, screen_id_list,
+                                  show_time_object_list, release_date_object, end_date_object)
 
     return Response("OK", status=200)
 
@@ -153,7 +161,22 @@ def add_new_user():
     if flag == 1:
         return render_template('addmovie.html', data_theater=data)
     else:
-        return render_template('movielist.html')
+        return render_template('movielist.html', data_movie=data)
+
+
+@app.route("/bookMovie", methods=["GET", "POST"])
+def book_movie():
+    print(request.form)
+    if request.form is not None and len(request.form) != 0:
+        theater_name = request.form['theater_name']
+        show_timings = request.form['show_timings']
+    else:
+        theater_name = request.args.get('theater_name', '')
+        show_timings = request.args.get('screen_time', '')
+    return jsonify({
+        'theater':theater_name,
+        'show_timings':show_timings
+    })
 
 
 @app.route("/signin", methods=["GET", "POST"])
@@ -179,7 +202,7 @@ def login():
         if flag == 1:
             return render_template('addmovie.html', data_theater=data)
         else:
-            return render_template('movielist.html')
+            return render_template('movielist.html', data_movie=data)
     else:
         error = 'Invalid Login ID or password'
         return render_template('signIn.html', error=error)

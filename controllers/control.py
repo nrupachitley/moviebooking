@@ -1,5 +1,6 @@
 from model import models
 from threading import Thread
+from datetime import datetime
 
 class Caller1(Thread):
 
@@ -17,25 +18,26 @@ class Caller1(Thread):
 
 class Caller2(Thread):
 
-    def __init__(self, movie_id, theater_number, screen_id, show_time_object, release_date_object, end_date_object):
+    def __init__(self, movie_id, theater_number, screen_id_list, show_time_object_list, release_date_object, end_date_object):
         Thread.__init__(self)
         self.movie_id = movie_id
         self.theater_number = theater_number
-        self.screen_id = screen_id
-        self.show_time_object = show_time_object
+        self.screen_id_list = screen_id_list
+        self.show_time_object_list = show_time_object_list
         self.release_date_object = release_date_object
         self.end_date_object = end_date_object
 
     def run(self):
-        models.add_movie_theater(self.movie_id, self.theater_number, self.screen_id, self.show_time_object,
+        for i in range(0, len(self.screen_id_list)):
+            models.add_movie_theater(self.movie_id, self.theater_number, self.screen_id_list[i], self.show_time_object_list[i],
                                  self.release_date_object, self.end_date_object)
 
 
-def add_items(movie_id, movie_name, genre, price, run_time_in_minutes, theater_number, screen_id, show_time_object,
+def add_items(movie_id, movie_name, genre, price, run_time_in_minutes, theater_number, screen_id_list, show_time_object_list,
               release_date_object, end_date_object):
     myCaller1 = Caller1(movie_id, movie_name, genre, price, run_time_in_minutes)
     myCaller1.start()
-    myCaller2 = Caller2(movie_id, theater_number, screen_id, show_time_object, release_date_object, end_date_object)
+    myCaller2 = Caller2(movie_id, theater_number, screen_id_list, show_time_object_list, release_date_object, end_date_object)
     myCaller2.start()
 
 
@@ -44,12 +46,25 @@ def add_new_user(login_id, password):
 
 
 def admin_control(login_id):
-    print (login_id)
     email_add = login_id.split("@")
     email = email_add[1].split(".")
-    # TODO: non admin users
     if email[0] == "amc" or email[0] == "bc" or email[0] == "century":
         return models.get_theaters(email[0]),1
+    else:
+        today_date = datetime.today().strftime('%Y-%m-%d')
+        result = models.get_movies(today_date)
+        d = {}
+        for r in result:
+            if r[0] not in d:
+                d[r[0]] = {}
+                if r[1] not in d[r[0]]:
+                    d[r[0]][r[1]] = []
+                d[r[0]][r[1]].append(r[3])
+            else:
+                if r[1] not in d[r[0]]:
+                    d[r[0]][r[1]] = []
+                d[r[0]][r[1]].append(r[3])
+        return d,0
 
 
 def check_login(email):
