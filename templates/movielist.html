@@ -18,27 +18,6 @@ body {
     background-color: white;
 }
 
-/* Full-width input fields */
-input[type=text] {
-    width: 100%;
-    padding: 15px;
-    margin: 5px 0 22px 0;
-    display: inline-block;
-    border: none;
-    background: #f1f1f1;
-}
-
-input[type=text]:focus {
-    background-color: #ddd;
-    outline: none;
-}
-
-/* Overwrite default styles of hr */
-hr {
-    border: 1px solid #f1f1f1;
-    margin-bottom: 25px;
-}
-
 /* Set a style for the submit button */
 .registerbtn {
     background-color: #4CAF50;
@@ -100,9 +79,9 @@ th {
 </style>
 </head>
 <body>
+<form action="{{ url_for('book_movie') }}" method="post">
 <div class="container">
-    <form action="{{ url_for('book_movie') }}" method="post" id="movieform"></form>
-   <table>
+   <!--<table>-->
         {% for movie_name in data_movie.keys() %}
        <table>
             <tr>
@@ -111,33 +90,40 @@ th {
             <tr>
                 <td align="center"><b>{{ movie_name }}</b></td>
             </tr>
-            <tr>
+            <!--<tr>-->
                 <table>
                     <tr>
                     <th>Theater Name</th>
-                    <th>Show Timings</th>
+                    <th>Show Timings : Screen Number</th>
                     <th>Action</th>
                     </tr>
                     {% for theater in data_movie[movie_name].keys() %}
                     <tr>
-                        <td><input type="hidden" form="movieform" name="theater_name">{{ theater }}</td>
+                        {% set theater_num = data_movie[movie_name][theater][0]['theater_id'] %}
+                        <td><input type="checkbox" value={{ theater_num }} name="theater_number">{{ theater }}</td>
                         <td>
                             <table>
-                                <select form="movieform" name="show_timings">
-                                    {% for time in data_movie[movie_name][theater] %}
-                                    <option value={{ time }} name="screen_time" >{{ time }}</option>
+                                    {% for dict in data_movie[movie_name][theater] %}
+                                    <td>
+                                        {% for time in dict['show_timing'] %}
+                                        {% set screen_time = time + '-' + dict['screen_id'] %}
+                                            <input type="checkbox" value={{ screen_time }} name="screen_time">{{ time }}
+                                            <!--{% set screen_num = dict['screen_id'] %}-->
+                                            <!--<input type="hidden" value={{ screen_num }} name="screen_id" />-->
+                                        {% endfor %}
+                                    </td>
                                     {% endfor %}
-                                </select>
                             </table>
                         </td>
-                        <td><input type="submit" class="registerbtn" form="movieform"/></td>
+                        <td><input type="submit" class="registerbtn" /></td>
                     </tr>
                     {% endfor %}
                 </table>
             </tr>
        </table>
         {% endfor %}
-   </table>
+   <!--</table>-->
 </div>
+</form>
 </body>
 </html>

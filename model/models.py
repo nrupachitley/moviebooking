@@ -96,7 +96,7 @@ def get_movies(today_date):
         results_list = list(results)
         for r in results_list:
             l = list(r)
-            l[4] = str(l[4])
+            l[3] = str(l[3])
             r = tuple(l)
             ans.append(r)
         results = tuple(ans)

@@ -25,7 +25,7 @@ def temp():
     data, flag = controllers.control.admin_control(login_id)
     return render_template('movielist.html', data_movie=data)
     # t = controllers.control.admin_control()
-    # return jsonify(t)
+    # return jsonify(data)
 
 @app.route("/")
 def hello():
@@ -168,14 +168,25 @@ def add_new_user():
 def book_movie():
     print(request.form)
     if request.form is not None and len(request.form) != 0:
-        theater_name = request.form['theater_name']
-        show_timings = request.form['show_timings']
+        theater_number = int(request.form['theater_number'])
+        screen_time = request.form['screen_time']
+        # screen_id = request.form['screen_id']
     else:
-        theater_name = request.args.get('theater_name', '')
-        show_timings = request.args.get('screen_time', '')
+        theater_number = int(request.args.get('theater_number', ''))
+        screen_time = request.args.get('screen_time', '')
+        # screen_id = request.args.get('screen_id', '')
+
+        #TODO: Convert to required data type ie-time
+
+    l = screen_time.split('-')
+    show_timing = l[0]
+    screen_id = l[1]
+
+
     return jsonify({
-        'theater':theater_name,
-        'show_timings':show_timings
+        'theater':theater_number,
+        'show_timing':show_timing,
+        'screen_id':screen_id
     })
 
 
