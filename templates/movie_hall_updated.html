@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* The container */
+.container {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 22px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Hide the browser's default checkbox */
+.container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Create a custom checkbox */
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 30px;
+    width: 30px;
+    background-color: #f4a742;
+}
+
+.checkmarkgrey {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 30px;
+    width: 30px;
+    background-color: #5f6063;
+}
+
+/* On mouse-over, add a grey background color */
+.container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+/* When the checkbox is checked, add a blue background */
+.container input:checked ~ .checkmark {
+    background-color: #2196F3;
+}
+
+/* Set a style for the submit button */
+.registerbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    opacity: 0.9;
+}
+
+.registerbtn:hover {
+    opacity: 1;
+}
+    </style>
+</head>
+<body>
+
+<form action="{{ url_for('hold_seats') }}" method="post">
+        <div>
+            <!--<h1>Updated</h1>-->
+            <h3 align="center">Screen Here</h3>
+            {% set max_row = hall_dim[0][0] | int %}
+            {% set max_col = hall_dim[0][1] | int %}
+            <table align="center">
+            {% for row in range(1, max_row + 1) %}
+                <tr>
+                    {% for col in range(1, max_col + 1) %}
+                    {% set curr_row = row | string %}
+                    {% set curr_col = col | string %}
+                    {% set info = curr_row + '-' + curr_col %}
+                    {% set seat = letter_dict[row + 64] + curr_col %}
+                    <td>
+                        <label class="container">
+                            {% if seat in seat_update %}
+                                <input type="checkbox" class="container" disabled="disabled"/>
+                                <span class="checkmarkgrey"></span>
+                            {% else %}
+                                <input type="checkbox" class="container" value={{ info }} name="info"/>
+                                <span class="checkmark"></span>
+                            {% endif %}
+                            <br>
+                        </label>
+                    </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </table>
+            {% set theater = info_dict[1] | string %}
+            {% set movie_id = info_dict[5] | string %}
+            {% set total = info_dict[0] + '/' + theater + '/' + info_dict[2] + '/' + info_dict[3] + '/' + info_dict[4] + '/' + movie_id %}
+            <input type="hidden" value= {{ total }} name="info_dict"/>
+            <button type="submit" class="registerbtn">Book Seats</button>
+        </div>
+    </form>
+
+</body>
+</html>

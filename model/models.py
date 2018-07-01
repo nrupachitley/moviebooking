@@ -87,7 +87,7 @@ def get_movies(today_date):
     try:
         d = handler.mysql.connect()
         cursor = d.cursor()
-        query = "SELECT movie_details.movie_name,theaters.theater_name,theaters.theater_number,movie_theater.show_timing, movie_theater.screen_id FROM movie_details " \
+        query = "SELECT movie_details.movie_name,movie_theater.movie_id,theaters.theater_name,theaters.theater_number,movie_theater.show_timing, movie_theater.screen_id FROM movie_details " \
                 "JOIN movie_theater ON movie_details.movie_id=movie_theater.movie_id JOIN theaters ON movie_theater.theater_number=theaters.theater_number " \
                 "WHERE movie_theater.release_date <= %s AND movie_theater.end_date >= %s"
         cursor.execute(query, (today_date, today_date))
@@ -96,11 +96,57 @@ def get_movies(today_date):
         results_list = list(results)
         for r in results_list:
             l = list(r)
-            l[3] = str(l[3])
+            l[4] = str(l[4])
             r = tuple(l)
             ans.append(r)
         results = tuple(ans)
         # print (results)
+        return results
+
+    except Exception as e:
+        app.logger.error("Error Log: %s", e)
+        print e
+        return "NOT OK"
+
+def get_max_seats(theater_number, screen_id):
+    try:
+        d = handler.mysql.connect()
+        cursor = d.cursor()
+        query = "SELECT max_row,max_col FROM seats WHERE theater_number = %s AND screen_id = %s"
+        cursor.execute(query, (theater_number, screen_id))
+        results = cursor.fetchall()
+        # print(results)
+        return results
+
+    except Exception as e:
+        app.logger.error("Error Log: %s", e)
+        print e
+        return "NOT OK"
+
+def hold_seats(login_id, theater_number, screen_id, seat_row, seat_col, show_date, show_timing, status):
+    d = handler.mysql.connect()
+    cursor = d.cursor()
+    query = "INSERT INTO seat_status (theater_number,screen_id,seat_row,seat_col,show_date,show_timing,status,login_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+    try:
+        # Execute the SQL command
+        cursor.execute(query,
+                       (theater_number, screen_id, seat_row, seat_col, show_date, show_timing, status, login_id))
+        d.commit()
+        # Commit your changes in the database
+        print("inserted", theater_number, screen_id, seat_row, seat_col, show_date, show_timing, status, login_id)
+    except Exception as e:
+        print(e)
+        d.rollback()
+
+
+def get_seat_status(theater_number, screen_id, time, today_date):
+    try:
+        d = handler.mysql.connect()
+        cursor = d.cursor()
+        query = "SELECT seat_row,seat_col FROM seat_status WHERE theater_number = %s AND screen_id = %s AND show_timing = %s AND show_date = %s"
+        cursor.execute(query, (theater_number, screen_id, time, today_date))
+        results = cursor.fetchall()
+        # print(results)
         return results
 
     except Exception as e:

@@ -105,9 +105,10 @@ th {
                             <table>
                                     {% for dict in data_movie[movie_name][theater] %}
                                     <td>
+                                        {% set movie_id = dict['movie_id'] | string %}
                                         {% for time in dict['show_timing'] %}
-                                        {% set screen_time = time + '-' + dict['screen_id'] %}
-                                            <input type="checkbox" value={{ screen_time }} name="screen_time">{{ time }}
+                                        {% set details = time + '-' + dict['screen_id'] + '-' + movie_id + '-' + login %}
+                                            <input type="checkbox" value={{ details }} name="details">{{ time }}
                                             <!--{% set screen_num = dict['screen_id'] %}-->
                                             <!--<input type="hidden" value={{ screen_num }} name="screen_id" />-->
                                         {% endfor %}
