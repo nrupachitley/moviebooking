@@ -69,23 +69,41 @@ a {
 </head>
 <body>
 
-<form action="{{ url_for('login') }}" method="post">
+<form action="{{ url_for('confirm_booking') }}" method="post">
 
   <div class="container">
     <h1>Confirm Booking</h1>
     <p>Do you accept?</p>
     <hr>
 
+      Movie Name: <label>{{ movie_info[0][0] }}</label><br>
+      <br>
+      Show Date: <label>{{ other_info[4] }}</label><br>
+      <br>
+      Show Time: <label>{{ other_info[3] }}</label><br>
+      <br>
+      {% for seat in seat_info %}
+      Seats: <label>{{ seat }}</label><br>
+      {% endfor %}
+      <br>
+      Price / Ticket: <label>{{ movie_info[0][1] }}</label><br>
+      <br>
+
     <label><b>Yes</b>
-        <input type="checkbox" value="info" name="info" />
+        <input type="checkbox" value="Yes" name="decision" />
     </label>
 
     <label><b>No</b>
-        <input type="checkbox" value="info" name="info" />
+        <input type="checkbox" value="No" name="decision" />
     </label>
 
     <hr>
-
+      {% set theater = other_info[1] | string %}
+      {% set movie_id = other_info[5] | string %}
+      {% set ticket_price = movie_info[0][1] | string %}
+      {% set ts = seat_info|join("-") %}
+      {% set total = ts + '/' + other_info[0] + '/' + movie_id + '/' + theater + '/' + other_info[2] + '/' + other_info[3] + '/' + other_info[4] + '/' + ticket_price  %}
+      <input type="hidden" value= {{ total }} name="complete_info_list"/>
     <button type="submit" class="registerbtn">Confirm</button>
   </div>
 

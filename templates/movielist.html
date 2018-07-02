@@ -93,9 +93,10 @@ th {
             <!--<tr>-->
                 <table>
                     <tr>
-                    <th>Theater Name</th>
-                    <th>Show Timings : Screen Number</th>
-                    <th>Action</th>
+                        <th>Theater Name</th>
+                        <th>Show Timings : Screen Number</th>
+                        <th>Show Date</th>
+                        <th>Action</th>
                     </tr>
                     {% for theater in data_movie[movie_name].keys() %}
                     <tr>
@@ -109,13 +110,14 @@ th {
                                         {% for time in dict['show_timing'] %}
                                         {% set details = time + '-' + dict['screen_id'] + '-' + movie_id + '-' + login %}
                                             <input type="checkbox" value={{ details }} name="details">{{ time }}
-                                            <!--{% set screen_num = dict['screen_id'] %}-->
-                                            <!--<input type="hidden" value={{ screen_num }} name="screen_id" />-->
                                         {% endfor %}
                                     </td>
                                     {% endfor %}
                             </table>
                         </td>
+                        {% set min_date = data_movie[movie_name][theater][0]['release_date'] %}
+                        {% set max_date = data_movie[movie_name][theater][0]['end_date'] %}
+                        <td><input type="date" min={{ min_date }} max={{ max_date }} name="show_date" value={{ show_date }}/></td>
                         <td><input type="submit" class="registerbtn" /></td>
                     </tr>
                     {% endfor %}

@@ -5,7 +5,6 @@ from flask import request, render_template
 from flaskext.mysql import MySQL
 import controllers.control
 from datetime import datetime
-import model.models
 
 app = Flask(__name__)
 app.logger.disabled = False
@@ -166,13 +165,14 @@ def add_new_user():
 
 @app.route("/bookMovie", methods=["GET", "POST"])
 def book_movie():
-    print(request.form)
     if request.form is not None and len(request.form) != 0:
         theater_number = int(request.form['theater_number'])
         details = request.form['details']
+        show_date = request.form.getlist('show_date')
     else:
         theater_number = int(request.args.get('theater_number', ''))
         details = request.args.get('details', '')
+        show_date = request.args.get.getlist('show_date', '')
 
     l = details.split('-')
     show_timing = l[0]
@@ -182,17 +182,22 @@ def book_movie():
 
     time_object = datetime.strptime(show_timing, '%H:%M:%S')
     time = time_object.strftime('%H:%M:%S')
-    today_date = datetime.today().strftime('%Y-%m-%d')
+
+    for curr_date in show_date:
+        if curr_date != "":
+            show_date_object = datetime.strptime(curr_date, '%Y-%m-%d')
+    date = show_date_object.strftime('%Y-%m-%d')
+    # return jsonify(date)
 
     info_dict = []
     info_dict.append(login_id)
     info_dict.append(theater_number)
     info_dict.append(screen_id)
     info_dict.append(time)
-    info_dict.append(today_date)
+    info_dict.append(date)
     info_dict.append(movie_id)
 
-    result1, result2 = controllers.control.seat_status(theater_number, screen_id, time, today_date)
+    result1, result2 = controllers.control.seat_status(theater_number, screen_id, time, date)
 
     if result2 == 0:
         return render_template('movie_hall.html', hall_dim=result1, info_dict=info_dict)
@@ -200,39 +205,37 @@ def book_movie():
         d = {65:'A',66:'B',67:'C',68:'D',69:'E',70:'F',71:'G',72:'H',73:'I',74:'J',75:'K',76:'L',77:'M',78:'N',79:'O',80:'P',81:'Q',82:'R',83:'S',84:'T',85:'U',86:'V',87:'W',88:'X',89:'Y',90:'Z'}
         return render_template('movie_hall_updated.html', hall_dim=result1, seat_update=result2, info_dict=info_dict, letter_dict=d)
 
-    # return jsonify(info_dict)
-
-    # return jsonify({
-    #     'theater':theater_number,
-    #     'show_timing':show_timing,
-    #     'screen_id':screen_id,
-    #     'movie_id':movie_id,
-    #     'login_id':login_id
-    # })
 
 @app.route("/holdSeats", methods=["GET", "POST"])
 def hold_seats():
-    if request.form is not None and len(request.form) != 0:
-        info = request.form.getlist('info')
-        info_dict = request.form.getlist('info_dict')
+    info = request.form.getlist('info')  #seat number reserved
+    info_dict = request.form.getlist('info_dict')
 
-    else:
-        info = request.args.getlist('info', '')
-        info_dict = request.args.getlist('info_dict', '')
-
-    # return jsonify({'info':info, 'info_dict':info_dict})
-    #TODO: send Login ID to next phase
     controllers.control.hold_seats(info, info_dict)
-    return render_template('payment.html')
+    result, seat_list, other_list = controllers.control.get_movie_details(info, info_dict)
+
+    return render_template('payment.html', seat_info=seat_list, other_info=other_list, movie_info=result)
+
+
+@app.route("/confirmBooking", methods=["POST"])
+def confirm_booking():
+    decision = request.form['decision']
+    complete_info_list = request.form['complete_info_list']
+
+    if decision == "Yes":
+        controllers.control.confirm_booking(complete_info_list)
+        message = 'Booking Confirmed'
+        return jsonify(message)
+    else:
+        controllers.control.delete_booking(complete_info_list)
+        message = 'Booking Cancelled'
+        return jsonify(message)
+
 
 @app.route("/signin", methods=["GET", "POST"])
 def login():
-    if request.form is not None and len(request.form) != 0:
-        login_id = request.form['login_id']
-        password = request.form['password']
-    else:
-        login_id = request.args.get('login_id', '')
-        password = request.args.get('password', '')
+    login_id = request.form['login_id']
+    password = request.form['password']
 
     if len(login_id) == 0:
         return bad_request(login_id)
