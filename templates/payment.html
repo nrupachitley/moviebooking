@@ -86,7 +86,9 @@ a {
       Seats: <label>{{ seat }}</label><br>
       {% endfor %}
       <br>
-      Price / Ticket: <label>{{ movie_info[0][1] }}</label><br>
+      {% set total_seats = seat_info | length %}
+      {% set cost = total_seats * movie_info[0][1] %}
+      Price $: <label>{{ cost }}</label><br>
       <br>
 
     <label><b>Yes</b>
@@ -102,7 +104,7 @@ a {
       {% set movie_id = other_info[5] | string %}
       {% set ticket_price = movie_info[0][1] | string %}
       {% set ts = seat_info|join("-") %}
-      {% set total = ts + '/' + other_info[0] + '/' + movie_id + '/' + theater + '/' + other_info[2] + '/' + other_info[3] + '/' + other_info[4] + '/' + ticket_price  %}
+      {% set total = ts + '/' + other_info[0] + '/' + movie_id + '/' + theater + '/' + other_info[2] + '/' + other_info[3] + '/' + other_info[4] + '/' + ticket_price + '/' + movie_info[0][0] %}
       <input type="hidden" value= {{ total }} name="complete_info_list"/>
     <button type="submit" class="registerbtn">Confirm</button>
   </div>

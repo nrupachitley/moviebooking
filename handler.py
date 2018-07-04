@@ -1,10 +1,11 @@
-from flask import Flask, redirect, flash
+from flask import Flask
 from flask import jsonify
 from flask import Response
 from flask import request, render_template
 from flaskext.mysql import MySQL
 import controllers.control
 from datetime import datetime
+from flask_mail import Mail
 
 app = Flask(__name__)
 app.logger.disabled = False
@@ -17,14 +18,19 @@ app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_DATABASE_PORT'] = 3306
 mysql.init_app(app)
 
-
-# @app.route("/try")
-# def temp():
-    # login_id = request.args.get('l', '')
-    # data, flag = controllers.control.admin_control(login_id)
-    # return render_template('movielist.html', data_movie=data)
-    # t = controllers.control.admin_control()
-    # return render_template('payment.html')
+mail = Mail()
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_DEBUG'] = app.debug
+app.config['MAIL_USERNAME'] = 'atare.personal@gmail.com'
+app.config['MAIL_PASSWORD'] = 'Dearth123'
+app.config['MAIL_DEFAULT_SENDER'] = 'atare.personal@gmail.com'
+app.config['MAIL_MAX_EMAILS'] = None
+app.config['MAIL_SUPPRESS_SEND'] = app.testing
+app.config['MAIL_ASCII_ATTACHMENTS'] = False
+mail.init_app(app)
 
 @app.route("/")
 def hello():
@@ -69,28 +75,16 @@ def not_found(s, error=None):
 
 @app.route("/addmovie", methods=["GET", "POST"])
 def add_new_movie():
-    if request.form is not None and len(request.form) != 0:
-        movie_id = int(request.form['movie_id'])
-        movie_name = request.form['movie_name']
-        genre = request.form['genre']
-        price = float(request.form['price'])
-        run_time_in_minutes = int(request.form['run_time_in_minutes'])
-        theater_number = int(request.form['theater_number'])
-        show_timing = request.form['show_timing']
-        screen_id = request.form['screen_id']
-        release_date = request.form['release_date']
-        end_date = request.form['end_date']
-    else:
-        movie_id = int(request.args.get('movie_id', ''))
-        movie_name = request.args.get('movie_name', '')
-        genre = request.args.get('genre', '')
-        price = float(request.args.get('price', ''))
-        run_time_in_minutes = int(request.args.get('run_time_in_minutes', ''))
-        theater_number = int(request.args.get('theater_number', ''))
-        screen_id = request.args.get('screen_id', '')
-        show_timing = request.args.get('show_timing', '')
-        release_date = request.args.get('release_date', '')
-        end_date = request.args.get('end_date', '')
+    movie_id = int(request.form['movie_id'])
+    movie_name = request.form['movie_name']
+    genre = request.form['genre']
+    price = float(request.form['price'])
+    run_time_in_minutes = int(request.form['run_time_in_minutes'])
+    theater_number = int(request.form['theater_number'])
+    show_timing = request.form['show_timing']
+    screen_id = request.form['screen_id']
+    release_date = request.form['release_date']
+    end_date = request.form['end_date']
 
 
     show_time_list = show_timing.split(',')
@@ -142,12 +136,8 @@ def add_new_movie():
 
 @app.route("/adduser", methods=["GET", "POST"])
 def add_new_user():
-    if request.form is not None and len(request.form) != 0:
-        login_id = request.form['login_id']
-        password = request.form['password']
-    else:
-        login_id = request.args.get('login_id', '')
-        password = request.args.get('password', '')
+    login_id = request.form['login_id']
+    password = request.form['password']
 
     if len(login_id) == 0:
         return bad_request(login_id)
@@ -165,14 +155,9 @@ def add_new_user():
 
 @app.route("/bookMovie", methods=["GET", "POST"])
 def book_movie():
-    if request.form is not None and len(request.form) != 0:
-        theater_number = int(request.form['theater_number'])
-        details = request.form['details']
-        show_date = request.form.getlist('show_date')
-    else:
-        theater_number = int(request.args.get('theater_number', ''))
-        details = request.args.get('details', '')
-        show_date = request.args.get.getlist('show_date', '')
+    theater_number = int(request.form['theater_number'])
+    details = request.form['details']
+    show_date = request.form.getlist('show_date')
 
     l = details.split('-')
     show_timing = l[0]
@@ -223,7 +208,7 @@ def confirm_booking():
     complete_info_list = request.form['complete_info_list']
 
     if decision == "Yes":
-        controllers.control.confirm_booking(complete_info_list)
+        controllers.control.confirm_booking(complete_info_list, mail)
         message = 'Booking Confirmed'
         return jsonify(message)
     else:

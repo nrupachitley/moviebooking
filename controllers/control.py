@@ -1,6 +1,7 @@
 from model import models
 from threading import Thread
 from datetime import datetime
+from flask_mail import Message
 
 class Caller1(Thread):
 
@@ -147,7 +148,27 @@ def get_movie_details(info, info_dict):
 
     return models.get_movie_details(movie_id), seat_list, other_list
 
-def confirm_booking(complete_info_list):
+def mesage(information_list, mail):
+    login_id = information_list[1]
+    date = information_list[6]
+    time = information_list[5]
+    movie_name = information_list[8]
+
+    date_object = datetime.strptime(date, '%Y-%m-%d')
+    show_date = date_object.strftime('%Y-%m-%d')
+
+    time_object = datetime.strptime(time, '%H:%M:%S')
+    show_time = time_object.strftime('%H:%M:%S')
+
+    all_seats = information_list[0].split('-')
+    seats = ','.join(map(str, all_seats))
+
+    message = "Movie tickets for " + movie_name + " has been confirmed for " + show_date + " at " + show_time + ". Seats: " + seats + "."
+
+    msg = Message(message, recipients=[login_id])
+    mail.send(msg)
+
+def confirm_booking(complete_info_list, mail):
     information = complete_info_list.split('/')
     login_id = information[1]
     movie_id = int(information[2])
@@ -171,6 +192,8 @@ def confirm_booking(complete_info_list):
         seat_col = int(seat[1])
         models.booked(login_id, movie_id, theater_number, show_date, show_time, seat_row, seat_col, price)
 
+    mesage(information, mail)
+
 def delete_booking(complete_info_list):
     information = complete_info_list.split('/')
     login_id = information[1]
@@ -186,3 +209,4 @@ def delete_booking(complete_info_list):
     show_time = time_object.strftime('%H:%M:%S')
 
     models.delete_seat_status(login_id, theater_number, screen_id, show_date, show_time)
+
