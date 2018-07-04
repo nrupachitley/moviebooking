@@ -163,9 +163,8 @@ def mesage(information_list, mail):
     all_seats = information_list[0].split('-')
     seats = ','.join(map(str, all_seats))
 
-    message = "Movie tickets for " + movie_name + " has been confirmed for " + show_date + " at " + show_time + ". Seats: " + seats + "."
-
-    msg = Message(message, recipients=[login_id])
+    msg = Message('Movie Booking Confirmation', recipients=[login_id])
+    msg.body = "Movie tickets for " + movie_name + " has been confirmed for " + show_date + " at " + show_time + ". Seats: " + seats + "."
     mail.send(msg)
 
 def confirm_booking(complete_info_list, mail):
