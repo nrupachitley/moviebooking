@@ -2,7 +2,6 @@ from model import models
 from threading import Thread
 from datetime import datetime
 from flask_mail import Message
-from multiprocessing.pool import ThreadPool
 
 class Caller1(Thread):
 
@@ -41,6 +40,9 @@ def add_items(movie_id, movie_name, genre, price, run_time_in_minutes, theater_n
     myCaller1.start()
     myCaller2 = Caller2(movie_id, theater_number, screen_id_list, show_time_object_list, release_date_object, end_date_object)
     myCaller2.start()
+
+    myCaller1.join()
+    myCaller2.join()
 
 
 def add_new_user(login_id, password):
