@@ -2,6 +2,7 @@ from model import models
 from threading import Thread
 from datetime import datetime
 from flask_mail import Message
+from multiprocessing.pool import ThreadPool
 
 class Caller1(Thread):
 
@@ -167,6 +168,21 @@ def mesage(information_list, mail):
     msg.body = "Movie tickets for " + movie_name + " has been confirmed for " + show_date + " at " + show_time + ". Seats: " + seats + "."
     mail.send(msg)
 
+
+class ChangeStatus(Thread):
+
+    def __init__(self, login_id, theater_number, screen_id, show_date, show_time):
+        Thread.__init__(self)
+        self.login_id = login_id
+        self.theater_number = theater_number
+        self.screen_id = screen_id
+        self.show_date = show_date
+        self.show_time = show_time
+
+    def run(self):
+        models.change_seat_status(self.login_id, self.theater_number, self.screen_id, self.show_date, self.show_time)
+
+
 def confirm_booking(complete_info_list, mail):
     information = complete_info_list.split('/')
     login_id = information[1]
@@ -183,13 +199,16 @@ def confirm_booking(complete_info_list, mail):
     time_object = datetime.strptime(time, '%H:%M:%S')
     show_time = time_object.strftime('%H:%M:%S')
 
-    models.change_seat_status(login_id, theater_number, screen_id, show_date, show_time)
+    thread1 = ChangeStatus(login_id, theater_number, screen_id, show_date, show_time)
+    thread1.start()
 
     all_seats = information[0].split('-')
     for seat in all_seats:
         seat_row = str(seat[0])
         seat_col = int(seat[1])
         models.booked(login_id, movie_id, theater_number, show_date, show_time, seat_row, seat_col, price)
+
+    thread1.join()
 
     mesage(information, mail)
 
