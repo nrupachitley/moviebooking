@@ -4,8 +4,10 @@ from flask import Response
 from flask import request, render_template
 from flaskext.mysql import MySQL
 import controllers.control
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_mail import Mail
+from celery import Celery
+from utils import utils
 
 app = Flask(__name__)
 app.logger.disabled = False
@@ -30,19 +32,42 @@ app.config['MAIL_DEFAULT_SENDER'] = 'atare.personal@gmail.com'
 app.config['MAIL_MAX_EMAILS'] = None
 app.config['MAIL_SUPPRESS_SEND'] = app.testing
 app.config['MAIL_ASCII_ATTACHMENTS'] = False
+app.config['CELERY_ACCEPT_CONTENT'] = ['pickle']
 mail.init_app(app)
+
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
+
+
+@celery.task(serializer='pickle')
+def sendReminderEmail(msg):
+    with app.app_context():
+        mail.send(msg)
+
+
+# @app.route("/try", methods=["GET"])
+# def tryasf():
+#     add_together.delay(3, 9)
+#     return Response("OK")
+
 
 @app.route("/")
 def hello():
     return render_template('index.html')
 
+
 @app.route("/signIn")
 def signIn():
     return render_template('signIn.html')
 
+
 @app.route("/signUp")
 def signUp():
     return render_template('signUp.html')
+
 
 @app.errorhandler(400)
 def bad_request(s, error=None):
@@ -65,7 +90,6 @@ def not_found(s, error=None):
         'status': 400,
         'message': 'BAD REQUEST ' + request.url,
         'reason': error,
-        'parameter': s,
     }
     resp = jsonify(message)
     resp.status_code = 404
@@ -85,7 +109,6 @@ def add_new_movie():
     screen_id = request.form['screen_id']
     release_date = request.form['release_date']
     end_date = request.form['end_date']
-
 
     show_time_list = show_timing.split(',')
     show_time_object_list = []
@@ -128,7 +151,8 @@ def add_new_movie():
         return bad_request(screen_id)
     screen_id_list = screen_id.split(',')
 
-    controllers.control.add_items(movie_id, movie_name, genre, price, run_time_in_minutes, theater_number, screen_id_list,
+    controllers.control.add_items(movie_id, movie_name, genre, price, run_time_in_minutes, theater_number,
+                                  screen_id_list,
                                   show_time_object_list, release_date_object, end_date_object)
 
     return Response("OK", status=200)
@@ -187,13 +211,16 @@ def book_movie():
     if result2 == 0:
         return render_template('movie_hall.html', hall_dim=result1, info_dict=info_dict)
     else:
-        d = {65:'A',66:'B',67:'C',68:'D',69:'E',70:'F',71:'G',72:'H',73:'I',74:'J',75:'K',76:'L',77:'M',78:'N',79:'O',80:'P',81:'Q',82:'R',83:'S',84:'T',85:'U',86:'V',87:'W',88:'X',89:'Y',90:'Z'}
-        return render_template('movie_hall_updated.html', hall_dim=result1, seat_update=result2, info_dict=info_dict, letter_dict=d)
+        d = {65: 'A', 66: 'B', 67: 'C', 68: 'D', 69: 'E', 70: 'F', 71: 'G', 72: 'H', 73: 'I', 74: 'J', 75: 'K', 76: 'L',
+             77: 'M', 78: 'N', 79: 'O', 80: 'P', 81: 'Q', 82: 'R', 83: 'S', 84: 'T', 85: 'U', 86: 'V', 87: 'W', 88: 'X',
+             89: 'Y', 90: 'Z'}
+        return render_template('movie_hall_updated.html', hall_dim=result1, seat_update=result2, info_dict=info_dict,
+                               letter_dict=d)
 
 
 @app.route("/holdSeats", methods=["GET", "POST"])
 def hold_seats():
-    info = request.form.getlist('info')  #seat number reserved
+    info = request.form.getlist('info')  # seat number reserved
     info_dict = request.form.getlist('info_dict')
 
     controllers.control.hold_seats(info, info_dict)
@@ -209,6 +236,10 @@ def confirm_booking():
 
     if decision == "Yes":
         controllers.control.confirm_booking(complete_info_list, mail)
+        msg, show_date, show_time = controllers.control.reminerEmail(complete_info_list)
+        time_obj = datetime.strptime(show_time, '%H:%M:%S') - timedelta(hours=1)
+        utc_time = utils.convert_timezone(show_date, time_obj.time())
+        sendReminderEmail.apply_async(args=(msg,), eta=utc_time)
         message = 'Booking Confirmed'
         return jsonify(message)
     else:
@@ -243,6 +274,3 @@ def login():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080, debug=True)
-
-
-

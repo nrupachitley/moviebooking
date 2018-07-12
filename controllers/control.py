@@ -3,6 +3,7 @@ from threading import Thread
 from datetime import datetime
 from flask_mail import Message
 
+
 class Caller1(Thread):
 
     def __init__(self, movie_id, movie_name, genre, price, run_time_in_minutes):
@@ -19,7 +20,8 @@ class Caller1(Thread):
 
 class Caller2(Thread):
 
-    def __init__(self, movie_id, theater_number, screen_id_list, show_time_object_list, release_date_object, end_date_object):
+    def __init__(self, movie_id, theater_number, screen_id_list, show_time_object_list, release_date_object,
+                 end_date_object):
         Thread.__init__(self)
         self.movie_id = movie_id
         self.theater_number = theater_number
@@ -30,15 +32,18 @@ class Caller2(Thread):
 
     def run(self):
         for i in range(0, len(self.screen_id_list)):
-            models.add_movie_theater(self.movie_id, self.theater_number, self.screen_id_list[i], self.show_time_object_list[i],
-                                 self.release_date_object, self.end_date_object)
+            models.add_movie_theater(self.movie_id, self.theater_number, self.screen_id_list[i],
+                                     self.show_time_object_list[i],
+                                     self.release_date_object, self.end_date_object)
 
 
-def add_items(movie_id, movie_name, genre, price, run_time_in_minutes, theater_number, screen_id_list, show_time_object_list,
+def add_items(movie_id, movie_name, genre, price, run_time_in_minutes, theater_number, screen_id_list,
+              show_time_object_list,
               release_date_object, end_date_object):
     myCaller1 = Caller1(movie_id, movie_name, genre, price, run_time_in_minutes)
     myCaller1.start()
-    myCaller2 = Caller2(movie_id, theater_number, screen_id_list, show_time_object_list, release_date_object, end_date_object)
+    myCaller2 = Caller2(movie_id, theater_number, screen_id_list, show_time_object_list, release_date_object,
+                        end_date_object)
     myCaller2.start()
 
     myCaller1.join()
@@ -53,7 +58,7 @@ def admin_control(login_id):
     email_add = login_id.split("@")
     email = email_add[1].split(".")
     if email[0] == "amc" or email[0] == "bc" or email[0] == "century":
-        return models.get_theaters(email[0]),1
+        return models.get_theaters(email[0]), 1
     else:
         today_date = datetime.today().strftime('%Y-%m-%d')
         result = models.get_movies(today_date)
@@ -103,7 +108,7 @@ def admin_control(login_id):
                         last_dict['release_date'] = r[6]
                         last_dict['end_date'] = r[7]
         # print d
-        return d,0
+        return d, 0
 
 
 def check_login(email):
@@ -111,7 +116,7 @@ def check_login(email):
 
 
 def seat_status(theater_number, screen_id, time, today_date):
-    result1 = models.get_max_seats(theater_number,screen_id)
+    result1 = models.get_max_seats(theater_number, screen_id)
     result2 = models.get_seat_status(theater_number, screen_id, time, today_date)
     final_list = []
     if len(result2) != 0:
@@ -137,6 +142,7 @@ def hold_seats(info, info_dict):
         seat_col = int(seat_list[1])
         models.hold_seats(login_id, theater_number, screen_id, seat_row, seat_col, show_date, show_timing, status)
 
+
 def get_movie_details(info, info_dict):
     info_string = ''.join(info_dict)
     other_list = info_string.split('/')
@@ -150,6 +156,7 @@ def get_movie_details(info, info_dict):
         seat_list.append(seat_row + seat_col)
 
     return models.get_movie_details(movie_id), seat_list, other_list
+
 
 def mesage(information_list, mail):
     login_id = information_list[1]
@@ -214,6 +221,7 @@ def confirm_booking(complete_info_list, mail):
 
     mesage(information, mail)
 
+
 def delete_booking(complete_info_list):
     information = complete_info_list.split('/')
     login_id = information[1]
@@ -230,3 +238,22 @@ def delete_booking(complete_info_list):
 
     models.delete_seat_status(login_id, theater_number, screen_id, show_date, show_time)
 
+def reminerEmail(complete_info_list):
+    information = complete_info_list.split('/')
+    login_id = information[1]
+    date = information[6]
+    time = information[5]
+    movie_name = information[8]
+
+    date_object = datetime.strptime(date, '%Y-%m-%d')
+    show_date = date_object.strftime('%Y-%m-%d')
+
+    time_object = datetime.strptime(time, '%H:%M:%S')
+    show_time = time_object.strftime('%H:%M:%S')
+
+    all_seats = information[0].split('-')
+    seats = ','.join(map(str, all_seats))
+
+    msg = Message('Movie Reminder', recipients=[login_id])
+    msg.body = "You have movie tickets booked for " + movie_name + " for today at " + show_time + ". Seats: " + seats + "."
+    return (msg, show_date, show_time)

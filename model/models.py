@@ -1,5 +1,5 @@
 import handler
-from handler import app
+from datetime import timedelta
 
 def add_new_movie(movie_id, movie_name, genre, price, run_time_in_minutes):
     d = handler.mysql.connect()
@@ -64,7 +64,6 @@ def get_theaters(email):
         return results
 
     except Exception as e:
-        app.logger.error("Error Log: %s", e)
         print e
         return "NOT OK"
 
@@ -78,7 +77,6 @@ def check_login(email):
         return results
 
     except Exception as e:
-        app.logger.error("Error Log: %s", e)
         print e
         return "NOT OK"
 
@@ -106,7 +104,6 @@ def get_movies(today_date):
         return results
 
     except Exception as e:
-        app.logger.error("Error Log: %s", e)
         print e
         return "NOT OK"
 
@@ -121,7 +118,6 @@ def get_max_seats(theater_number, screen_id):
         return results
 
     except Exception as e:
-        app.logger.error("Error Log: %s", e)
         print e
         return "NOT OK"
 
@@ -152,7 +148,6 @@ def get_seat_status(theater_number, screen_id, time, today_date):
         return results
 
     except Exception as e:
-        app.logger.error("Error Log: %s", e)
         print e
         return "NOT OK"
 
@@ -167,7 +162,6 @@ def get_movie_details(movie_id):
         return results
 
     except Exception as e:
-        app.logger.error("Error Log: %s", e)
         print e
         return "NOT OK"
 
@@ -211,3 +205,4 @@ def delete_seat_status(login_id, theater_number, screen_id, show_date, show_time
     except Exception as e:
         print(e)
         d.rollback()
+
