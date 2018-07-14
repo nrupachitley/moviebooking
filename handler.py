@@ -50,8 +50,10 @@ def sendReminderEmail(msg):
 
 # @app.route("/try", methods=["GET"])
 # def tryasf():
-#     add_together.delay(3, 9)
-#     return Response("OK")
+   # return render_template('movielist.html')
+#    return render_template('personalpage.html')
+    #controllers.control.bookingHistory('nrupachitley@gmail.com')
+    #return Response("OK")
 
 
 @app.route("/")
@@ -271,6 +273,14 @@ def login():
         error = 'Invalid Login ID or password'
         return render_template('signIn.html', error=error)
 
+
+@app.route("/bookingHistory", methods=["GET", "POST"])
+def booking_history():
+    login_id = request.form['login_id']
+
+    data = controllers.control.bookingHistory(login_id)
+    # return jsonify(data)
+    return render_template('personalpage.html', data=data)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080, debug=True)

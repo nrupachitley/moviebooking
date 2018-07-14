@@ -206,3 +206,19 @@ def delete_seat_status(login_id, theater_number, screen_id, show_date, show_time
         print(e)
         d.rollback()
 
+
+def booking_history(email):
+    try:
+        d = handler.mysql.connect()
+        cursor = d.cursor()
+        query = "SELECT movie_details.movie_name, theaters.theater_name, booked.show_date, booked.show_time, SUM(booked.price) AS total FROM booked " \
+                "JOIN movie_details ON booked.movie_id=movie_details.movie_id JOIN theaters ON theaters.theater_number=booked.theater_number " \
+                "WHERE booked.login_id = %s GROUP BY booked.show_date,booked.show_time,booked.movie_id"
+        cursor.execute(query, (email))
+        results = cursor.fetchall()
+        # print(results)
+        return results
+
+    except Exception as e:
+        print e
+        return "NOT OK"

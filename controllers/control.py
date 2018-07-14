@@ -158,7 +158,7 @@ def get_movie_details(info, info_dict):
     return models.get_movie_details(movie_id), seat_list, other_list
 
 
-def mesage(information_list, mail):
+def message(information_list, mail):
     login_id = information_list[1]
     date = information_list[6]
     time = information_list[5]
@@ -219,7 +219,7 @@ def confirm_booking(complete_info_list, mail):
 
     thread1.join()
 
-    mesage(information, mail)
+    message(information, mail)
 
 
 def delete_booking(complete_info_list):
@@ -257,3 +257,29 @@ def reminerEmail(complete_info_list):
     msg = Message('Movie Reminder', recipients=[login_id])
     msg.body = "You have movie tickets booked for " + movie_name + " for today at " + show_time + ". Seats: " + seats + "."
     return (msg, show_date, show_time)
+
+def bookingHistory(email):
+    data = models.booking_history(email)
+    dict = {}
+    for d in data:
+        if str(d[2]) not in dict:
+            dict[str(d[2])] = []
+            dict[str(d[2])].append([])
+            for lst in dict[str(d[2])]:
+                lst.append(d[0])
+                lst.append(d[1])
+                lst.append(str(d[3]))
+                lst.append(d[4])
+        else:
+            dict[str(d[2])].append([])
+            l = dict[str(d[2])]
+            last_lst = l[-1]
+            last_lst.append(d[0])
+            last_lst.append(d[1])
+            last_lst.append(str(d[3]))
+            last_lst.append(d[4])
+
+    return dict
+
+
+

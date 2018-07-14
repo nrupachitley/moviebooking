@@ -79,6 +79,13 @@ th {
 </style>
 </head>
 <body>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<form action="{{ url_for('booking_history') }}" method="post">
+    <div class="w3-container" align="right">
+        <td><input type="hidden" name="login_id" value={{ login }}></td>
+        <button class="w3-button w3-large w3-purple">Booking History</button>
+    </div>
+</form>
 <form action="{{ url_for('book_movie') }}" method="post">
 <div class="container">
    <!--<table>-->
