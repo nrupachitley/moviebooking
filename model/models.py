@@ -222,3 +222,17 @@ def booking_history(email):
     except Exception as e:
         print e
         return "NOT OK"
+
+
+def insert_ratings(login_id, movie_id, rating):
+    d = handler.mysql.connect()
+    cursor = d.cursor()
+    query = "INSERT INTO feedback (login_id,movie_id,rating) VALUES (%s,%s,%s)"
+    try:
+        cursor.execute(query, (login_id, movie_id, rating))
+        d.commit()
+        # Commit your changes in the database
+        print("inserted", login_id, movie_id, rating)
+    except Exception as e:
+        print(e)
+        d.rollback()

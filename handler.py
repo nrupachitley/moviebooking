@@ -43,17 +43,15 @@ celery.conf.update(app.config)
 
 
 @celery.task(serializer='pickle')
-def sendReminderEmail(msg):
+def sendFeedbackEmail(msg):
     with app.app_context():
         mail.send(msg)
 
 
-# @app.route("/try", methods=["GET"])
-# def tryasf():
-   # return render_template('movielist.html')
-#    return render_template('personalpage.html')
-    #controllers.control.bookingHistory('nrupachitley@gmail.com')
-    #return Response("OK")
+@celery.task(serializer='pickle')
+def sendReminderEmail(msg):
+    with app.app_context():
+        mail.send(msg)
 
 
 @app.route("/")
@@ -238,10 +236,17 @@ def confirm_booking():
 
     if decision == "Yes":
         controllers.control.confirm_booking(complete_info_list, mail)
+
         msg, show_date, show_time = controllers.control.reminerEmail(complete_info_list)
         time_obj = datetime.strptime(show_time, '%H:%M:%S') - timedelta(hours=1)
         utc_time = utils.convert_timezone(show_date, time_obj.time())
         sendReminderEmail.apply_async(args=(msg,), eta=utc_time)
+
+        msg_feedback, show_date_feedback, show_time_feedback = controllers.control.feedback(complete_info_list)
+        feedback_time = datetime.strptime(show_time_feedback, '%H:%M:%S') + timedelta(hours=1)
+        utc_time_feedback = utils.convert_timezone(show_date_feedback, feedback_time.time())
+        sendFeedbackEmail.apply_async(args=(msg_feedback,), eta=utc_time_feedback)
+
         message = 'Booking Confirmed'
         return jsonify(message)
     else:
@@ -279,8 +284,19 @@ def booking_history():
     login_id = request.form['login_id']
 
     data = controllers.control.bookingHistory(login_id)
-    # return jsonify(data)
     return render_template('personalpage.html', data=data)
+
+
+@app.route("/feedback", methods=["POST"])
+def feedback():
+    login_id = request.form['login_id']
+    movie_id = int(request.form['movie_id'])
+    rating = int(request.form['rating'])
+
+    controllers.control.insertRatings(login_id, movie_id, rating)
+    message = 'Rating Submitted'
+    return jsonify(message)
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080, debug=True)

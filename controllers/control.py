@@ -2,6 +2,7 @@ from model import models
 from threading import Thread
 from datetime import datetime
 from flask_mail import Message
+from flask import render_template, redirect
 
 
 class Caller1(Thread):
@@ -282,4 +283,24 @@ def bookingHistory(email):
     return dict
 
 
+def feedback(complete_info_list):
+    information = complete_info_list.split('/')
+    login_id = information[1]
+    movie_id = int(information[2])
+    date = information[6]
+    time = information[5]
+    movie_name = information[8]
 
+    date_object = datetime.strptime(date, '%Y-%m-%d')
+    show_date = date_object.strftime('%Y-%m-%d')
+
+    time_object = datetime.strptime(time, '%H:%M:%S')
+    show_time = time_object.strftime('%H:%M:%S')
+
+    msg_feedback = Message('Movie Feedback', recipients=[login_id])
+    msg_feedback.html = render_template('feedback.html', login_id=login_id, movie_id=movie_id, movie_name=movie_name)
+    return (msg_feedback, show_date, show_time)
+
+
+def insertRatings(login_id, movie_id, rating):
+    models.insert_ratings(login_id, movie_id, rating)
