@@ -87,8 +87,53 @@ th {
     </div>
 </form>
 <form action="{{ url_for('book_movie') }}" method="post">
+    <div class="container">
+        <h2 align="center"><b>Popular Movies</b></h2>
+        {% for movie_name in popular_movie.keys() %}
+        <table>
+            <tr>
+                <th id="moviename"> Movie Name </th>
+            </tr>
+            <tr>
+                <td align="center"><b>{{ movie_name }}</b></td>
+            </tr>
+            <table>
+                <tr>
+                        <th>Theater Name</th>
+                        <th>Show Timings</th>
+                        <th>Show Date</th>
+                        <th>Action</th>
+                </tr>
+                {% for theater in popular_movie[movie_name].keys() %}
+                <tr>
+                    {% set theater_num = popular_movie[movie_name][theater][0]['theater_id'] %}
+                    <td><input type="checkbox" value={{ theater_num }} name="theater_number">{{ theater }}</td>
+                    <td>
+                            <table>
+                                    {% for dict in popular_movie[movie_name][theater] %}
+                                    <td>
+                                        {% set movie_id = dict['movie_id'] | string %}
+                                        {% for time in dict['show_timing'] %}
+                                        {% set details = time + '-' + dict['screen_id'] + '-' + movie_id + '-' + login %}
+                                            <input type="checkbox" value={{ details }} name="details">{{ time }}
+                                        {% endfor %}
+                                    </td>
+                                    {% endfor %}
+                            </table>
+                    </td>
+                    {% set min_date = popular_movie[movie_name][theater][0]['release_date'] %}
+                    {% set max_date = popular_movie[movie_name][theater][0]['end_date'] %}
+                    <td><input type="date" min={{ min_date }} max={{ max_date }} name="show_date" value={{ show_date }}/></td>
+                    <td><input type="submit" class="registerbtn" /></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </table>
+        {% endfor %}
+    </div>
 <div class="container">
    <!--<table>-->
+    <h2 align="center"><b>Other Movies</b></h2>
         {% for movie_name in data_movie.keys() %}
        <table>
             <tr>
@@ -101,7 +146,7 @@ th {
                 <table>
                     <tr>
                         <th>Theater Name</th>
-                        <th>Show Timings : Screen Number</th>
+                        <th>Show Timings</th>
                         <th>Show Date</th>
                         <th>Action</th>
                     </tr>
@@ -129,7 +174,7 @@ th {
                     </tr>
                     {% endfor %}
                 </table>
-            </tr>
+            <!--</tr>-->
        </table>
         {% endfor %}
    <!--</table>-->

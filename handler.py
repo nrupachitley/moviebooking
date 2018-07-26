@@ -7,7 +7,10 @@ import controllers.control
 from datetime import datetime, timedelta
 from flask_mail import Mail
 from celery import Celery
+from celery.schedules import crontab
 from utils import utils
+import analytics.analyze
+import model.models
 
 app = Flask(__name__)
 app.logger.disabled = False
@@ -37,6 +40,13 @@ mail.init_app(app)
 
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+app.config['CELERYBEAT_SCHEDULE'] = {
+    'everyday-at-midnight': {
+        'task': 'handler.popularityIndex',
+        'schedule': crontab(minute=30, hour=6),
+        'args': ()
+    },
+}
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
@@ -52,6 +62,12 @@ def sendFeedbackEmail(msg):
 def sendReminderEmail(msg):
     with app.app_context():
         mail.send(msg)
+
+
+@celery.task(name='handler.popularityIndex', serializer='pickle')
+def popularityIndex():
+    with app.app_context():
+        analytics.analyze.popularityIndex()
 
 
 @app.route("/")
@@ -170,11 +186,11 @@ def add_new_user():
         return bad_request(password)
 
     controllers.control.add_new_user(login_id, password)
-    data, flag = controllers.control.admin_control(login_id)
+    data, popular_data, flag = controllers.control.admin_control(login_id)
     if flag == 1:
         return render_template('addmovie.html', data_theater=data)
     else:
-        return render_template('movielist.html', data_movie=data, login=login_id)
+        return render_template('movielist.html', data_movie=data, popular_movie= popular_data, login=login_id)
 
 
 @app.route("/bookMovie", methods=["GET", "POST"])
@@ -269,11 +285,11 @@ def login():
     result = controllers.control.check_login(login_id)
 
     if login_id == result[0][0] and password == result[0][1]:
-        data, flag = controllers.control.admin_control(login_id)
+        data, popular_data, flag = controllers.control.admin_control(login_id)
         if flag == 1:
             return render_template('addmovie.html', data_theater=data)
         else:
-            return render_template('movielist.html', data_movie=data, login=login_id)
+            return render_template('movielist.html', data_movie=data, popular_movie=popular_data, login=login_id)
     else:
         error = 'Invalid Login ID or password'
         return render_template('signIn.html', error=error)

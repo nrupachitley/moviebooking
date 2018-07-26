@@ -1,5 +1,4 @@
 import handler
-from datetime import timedelta
 
 def add_new_movie(movie_id, movie_name, genre, price, run_time_in_minutes):
     d = handler.mysql.connect()
@@ -85,9 +84,9 @@ def get_movies(today_date):
     try:
         d = handler.mysql.connect()
         cursor = d.cursor()
-        query = "SELECT movie_details.movie_name,movie_theater.movie_id,theaters.theater_name,theaters.theater_number,movie_theater.show_timing, movie_theater.screen_id,movie_theater.release_date,movie_theater.end_date" \
+        query = "SELECT movie_details.movie_name,movie_theater.movie_id,theaters.theater_name,theaters.theater_number,movie_theater.show_timing, movie_theater.screen_id,movie_theater.release_date,movie_theater.end_date, movie_details.popularity_index" \
                 " FROM movie_details JOIN movie_theater ON movie_details.movie_id=movie_theater.movie_id JOIN theaters ON movie_theater.theater_number=theaters.theater_number " \
-                "WHERE movie_theater.release_date <= %s AND movie_theater.end_date >= %s"
+                "WHERE movie_theater.release_date <= %s AND movie_theater.end_date >= %s ORDER BY movie_details.popularity_index DESC"
         cursor.execute(query, (today_date, today_date))
         results = cursor.fetchall()
         ans = []
@@ -236,3 +235,48 @@ def insert_ratings(login_id, movie_id, rating):
     except Exception as e:
         print(e)
         d.rollback()
+
+
+def popularity_index_booking(today_date):
+    try:
+        d = handler.mysql.connect()
+        cursor = d.cursor()
+        query = "SELECT login_id, movie_id, theater_number,COUNT(*) AS total FROM booked " \
+                "WHERE show_date = %s GROUP BY login_id,theater_number,movie_id,show_time"
+        cursor.execute(query,(today_date))
+        results = cursor.fetchall()
+        # print(results)
+        return results
+
+    except Exception as e:
+        print e
+        return "NOT OK"
+
+
+def popularity_index_rating():
+    try:
+        d = handler.mysql.connect()
+        cursor = d.cursor()
+        query = "SELECT login_id, movie_id, AVG(rating) AS total FROM feedback GROUP BY movie_id"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        # print(results)
+        return results
+
+    except Exception as e:
+        print e
+        return "NOT OK"
+
+
+def insert_popularity_index(movie_id, popularity_index):
+    d = handler.mysql.connect()
+    cursor = d.cursor()
+    query = "UPDATE movie_details SET popularity_index = %s WHERE movie_id = %s"
+    try:
+        cursor.execute(query, (popularity_index, movie_id))
+        d.commit()
+
+    except Exception as e:
+        print(e)
+        d.rollback()
+
