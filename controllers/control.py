@@ -3,6 +3,7 @@ from threading import Thread
 from datetime import datetime
 from flask_mail import Message
 from flask import render_template, redirect
+from analytics import analyze
 
 
 class Caller1(Thread):
@@ -55,82 +56,71 @@ def add_new_user(login_id, password):
     models.add_new_user(login_id, password)
 
 
-def admin_control(login_id):
+def admin_control(login_id, flag):
     email_add = login_id.split("@")
     email = email_add[1].split(".")
     if email[0] == "amc" or email[0] == "bc" or email[0] == "century":
         return models.get_theaters(email[0]), 1
     else:
-        today_date = datetime.today().strftime('%Y-%m-%d')
-        result = models.get_movies(today_date)
+        if flag == True:
+            today_date = datetime.today().strftime('%Y-%m-%d')
+            result = models.get_movies(today_date)
 
-        movie_list = []
-        popularity_d = {}
+            movie_list = []
+            popularity_d = {}
 
-        for r in result:
-            if r[0] not in popularity_d:
-                if len(movie_list) < 5 and r[1] not in movie_list and r[8] > 1:
-                    movie_list.append(r[1])
-                    popularity_d[r[0]] = {}
-                    popularity_d[r[0]][r[2]] = []
-                    popularity_d[r[0]][r[2]].append({})
-                    for dict in popularity_d[r[0]][r[2]]:
-                        dict['show_timing'] = []
-                        dict['show_timing'].append(r[4])
-                        dict['theater_id'] = r[3]
-                        dict['screen_id'] = r[5]
-                        dict['movie_id'] = r[1]
-                        dict['release_date'] = r[6]
-                        dict['end_date'] = r[7]
-                else:
-                    break
-            else:
-                if r[2] not in popularity_d[r[0]]:
-                    popularity_d[r[0]][r[2]] = []
-                    popularity_d[r[0]][r[2]].append({})
-                    for dict in popularity_d[r[0]][r[2]]:
-                        dict['show_timing'] = []
-                        dict['show_timing'].append(r[4])
-                        dict['theater_id'] = r[3]
-                        dict['screen_id'] = r[5]
-                        dict['movie_id'] = r[1]
-                        dict['release_date'] = r[6]
-                        dict['end_date'] = r[7]
-                else:
-                    flag = 0
-                    for dict in popularity_d[r[0]][r[2]]:
-                        if dict['screen_id'] == r[5]:
-                            dict['show_timing'].append(r[4])
-                            flag = 1
-                    if flag == 0:
+            for r in result:
+                if r[0] not in popularity_d:
+                    if len(movie_list) < 5 and r[1] not in movie_list and r[8] > 1:
+                        movie_list.append(r[1])
+                        popularity_d[r[0]] = {}
+                        popularity_d[r[0]][r[2]] = []
                         popularity_d[r[0]][r[2]].append({})
-                        list_dict = popularity_d[r[0]][r[2]]
-                        last_dict = list_dict[-1]
-                        last_dict['show_timing'] = []
-                        last_dict['show_timing'].append(r[4])
-                        last_dict['theater_id'] = r[3]
-                        last_dict['screen_id'] = r[5]
-                        last_dict['movie_id'] = r[1]
-                        last_dict['release_date'] = r[6]
-                        last_dict['end_date'] = r[7]
-
-        d = {}
-        for r in result:
-            if r[1] not in movie_list:
-                if r[0] not in d:
-                    d[r[0]] = {}
-                    d[r[0]][r[2]] = []
-                    d[r[0]][r[2]].append({})
-                    for dict in d[r[0]][r[2]]:
-                        dict['show_timing'] = []
-                        dict['show_timing'].append(r[4])
-                        dict['theater_id'] = r[3]
-                        dict['screen_id'] = r[5]
-                        dict['movie_id'] = r[1]
-                        dict['release_date'] = r[6]
-                        dict['end_date'] = r[7]
+                        for dict in popularity_d[r[0]][r[2]]:
+                            dict['show_timing'] = []
+                            dict['show_timing'].append(r[4])
+                            dict['theater_id'] = r[3]
+                            dict['screen_id'] = r[5]
+                            dict['movie_id'] = r[1]
+                            dict['release_date'] = r[6]
+                            dict['end_date'] = r[7]
+                    else:
+                        break
                 else:
-                    if r[2] not in d[r[0]]:
+                    if r[2] not in popularity_d[r[0]]:
+                        popularity_d[r[0]][r[2]] = []
+                        popularity_d[r[0]][r[2]].append({})
+                        for dict in popularity_d[r[0]][r[2]]:
+                            dict['show_timing'] = []
+                            dict['show_timing'].append(r[4])
+                            dict['theater_id'] = r[3]
+                            dict['screen_id'] = r[5]
+                            dict['movie_id'] = r[1]
+                            dict['release_date'] = r[6]
+                            dict['end_date'] = r[7]
+                    else:
+                        flag = 0
+                        for dict in popularity_d[r[0]][r[2]]:
+                            if dict['screen_id'] == r[5]:
+                                dict['show_timing'].append(r[4])
+                                flag = 1
+                        if flag == 0:
+                            popularity_d[r[0]][r[2]].append({})
+                            list_dict = popularity_d[r[0]][r[2]]
+                            last_dict = list_dict[-1]
+                            last_dict['show_timing'] = []
+                            last_dict['show_timing'].append(r[4])
+                            last_dict['theater_id'] = r[3]
+                            last_dict['screen_id'] = r[5]
+                            last_dict['movie_id'] = r[1]
+                            last_dict['release_date'] = r[6]
+                            last_dict['end_date'] = r[7]
+
+            d = {}
+            for r in result:
+                if r[1] not in movie_list:
+                    if r[0] not in d:
+                        d[r[0]] = {}
                         d[r[0]][r[2]] = []
                         d[r[0]][r[2]].append({})
                         for dict in d[r[0]][r[2]]:
@@ -142,24 +132,130 @@ def admin_control(login_id):
                             dict['release_date'] = r[6]
                             dict['end_date'] = r[7]
                     else:
-                        flag = 0
-                        for dict in d[r[0]][r[2]]:
-                            if dict['screen_id'] == r[5]:
-                                dict['show_timing'].append(r[4])
-                                flag = 1
-                        if flag == 0:
+                        if r[2] not in d[r[0]]:
+                            d[r[0]][r[2]] = []
                             d[r[0]][r[2]].append({})
-                            list_dict = d[r[0]][r[2]]
-                            last_dict = list_dict[-1]
-                            last_dict['show_timing'] = []
-                            last_dict['show_timing'].append(r[4])
-                            last_dict['theater_id'] = r[3]
-                            last_dict['screen_id'] = r[5]
-                            last_dict['movie_id'] = r[1]
-                            last_dict['release_date'] = r[6]
-                            last_dict['end_date'] = r[7]
+                            for dict in d[r[0]][r[2]]:
+                                dict['show_timing'] = []
+                                dict['show_timing'].append(r[4])
+                                dict['theater_id'] = r[3]
+                                dict['screen_id'] = r[5]
+                                dict['movie_id'] = r[1]
+                                dict['release_date'] = r[6]
+                                dict['end_date'] = r[7]
+                        else:
+                            flag = 0
+                            for dict in d[r[0]][r[2]]:
+                                if dict['screen_id'] == r[5]:
+                                    dict['show_timing'].append(r[4])
+                                    flag = 1
+                            if flag == 0:
+                                d[r[0]][r[2]].append({})
+                                list_dict = d[r[0]][r[2]]
+                                last_dict = list_dict[-1]
+                                last_dict['show_timing'] = []
+                                last_dict['show_timing'].append(r[4])
+                                last_dict['theater_id'] = r[3]
+                                last_dict['screen_id'] = r[5]
+                                last_dict['movie_id'] = r[1]
+                                last_dict['release_date'] = r[6]
+                                last_dict['end_date'] = r[7]
 
-        return d, popularity_d, 0
+            return d, popularity_d, 0
+        else:
+            today_date = datetime.today().strftime('%Y-%m-%d')
+            reco_data = analyze.recommendation(today_date, login_id)
+            all_data = models.all_movies_data(today_date)
+
+            recommended_dict = {}
+            all_dict = {}
+            for r in all_data:
+                if r[0] in reco_data:
+                    if r[0] not in recommended_dict:
+                        recommended_dict[r[0]] = {}
+                        recommended_dict[r[0]][r[2]] = []
+                        recommended_dict[r[0]][r[2]].append({})
+                        for dict in recommended_dict[r[0]][r[2]]:
+                            dict['show_timing'] = []
+                            dict['show_timing'].append(r[4])
+                            dict['theater_id'] = r[3]
+                            dict['screen_id'] = r[5]
+                            dict['movie_id'] = r[1]
+                            dict['release_date'] = r[6]
+                            dict['end_date'] = r[7]
+                    else:
+                        if r[2] not in recommended_dict[r[0]]:
+                            recommended_dict[r[0]][r[2]] = []
+                            recommended_dict[r[0]][r[2]].append({})
+                            for dict in recommended_dict[r[0]][r[2]]:
+                                dict['show_timing'] = []
+                                dict['show_timing'].append(r[4])
+                                dict['theater_id'] = r[3]
+                                dict['screen_id'] = r[5]
+                                dict['movie_id'] = r[1]
+                                dict['release_date'] = r[6]
+                                dict['end_date'] = r[7]
+                        else:
+                            flag = 0
+                            for dict in recommended_dict[r[0]][r[2]]:
+                                if dict['screen_id'] == r[5]:
+                                    dict['show_timing'].append(r[4])
+                                    flag = 1
+                            if flag == 0:
+                                recommended_dict[r[0]][r[2]].append({})
+                                list_dict = recommended_dict[r[0]][r[2]]
+                                last_dict = list_dict[-1]
+                                last_dict['show_timing'] = []
+                                last_dict['show_timing'].append(r[4])
+                                last_dict['theater_id'] = r[3]
+                                last_dict['screen_id'] = r[5]
+                                last_dict['movie_id'] = r[1]
+                                last_dict['release_date'] = r[6]
+                                last_dict['end_date'] = r[7]
+                else:
+                    if r[0] not in all_dict:
+                        all_dict[r[0]] = {}
+                        all_dict[r[0]][r[2]] = []
+                        all_dict[r[0]][r[2]].append({})
+                        for dict in all_dict[r[0]][r[2]]:
+                            dict['show_timing'] = []
+                            dict['show_timing'].append(r[4])
+                            dict['theater_id'] = r[3]
+                            dict['screen_id'] = r[5]
+                            dict['movie_id'] = r[1]
+                            dict['release_date'] = r[6]
+                            dict['end_date'] = r[7]
+                    else:
+                        if r[2] not in all_dict[r[0]]:
+                            all_dict[r[0]][r[2]] = []
+                            all_dict[r[0]][r[2]].append({})
+                            for dict in all_dict[r[0]][r[2]]:
+                                dict['show_timing'] = []
+                                dict['show_timing'].append(r[4])
+                                dict['theater_id'] = r[3]
+                                dict['screen_id'] = r[5]
+                                dict['movie_id'] = r[1]
+                                dict['release_date'] = r[6]
+                                dict['end_date'] = r[7]
+                        else:
+                            flag = 0
+                            for dict in all_dict[r[0]][r[2]]:
+                                if dict['screen_id'] == r[5]:
+                                    dict['show_timing'].append(r[4])
+                                    flag = 1
+                            if flag == 0:
+                                all_dict[r[0]][r[2]].append({})
+                                list_dict = all_dict[r[0]][r[2]]
+                                last_dict = list_dict[-1]
+                                last_dict['show_timing'] = []
+                                last_dict['show_timing'].append(r[4])
+                                last_dict['theater_id'] = r[3]
+                                last_dict['screen_id'] = r[5]
+                                last_dict['movie_id'] = r[1]
+                                last_dict['release_date'] = r[6]
+                                last_dict['end_date'] = r[7]
+
+            return all_dict, recommended_dict, 0
 
 
 def check_login(email):

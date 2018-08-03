@@ -280,3 +280,61 @@ def insert_popularity_index(movie_id, popularity_index):
         print(e)
         d.rollback()
 
+
+def current_movies(today_date):
+    try:
+        d = handler.mysql.connect()
+        cursor = d.cursor()
+        query = "SELECT DISTINCT movie_details.movie_id, movie_details.movie_name, movie_details.genre FROM movie_details JOIN movie_theater " \
+                "ON movie_details.movie_id=movie_theater.movie_id WHERE movie_theater.release_date <= %s AND movie_theater.end_date >= %s"
+        cursor.execute(query,(today_date, today_date))
+        results = cursor.fetchall()
+        # print(results)
+        return results
+
+    except Exception as e:
+        print e
+        return "NOT OK"
+
+
+def person_movies(login_id):
+    try:
+        d = handler.mysql.connect()
+        cursor = d.cursor()
+        query = "SELECT DISTINCT movie_details.movie_id, movie_details.movie_name, movie_details.genre FROM movie_details" \
+                " JOIN booked ON movie_details.movie_id = booked.movie_id WHERE booked.login_id = %s"
+        cursor.execute(query,(login_id))
+        results = cursor.fetchall()
+        # print(results)
+        return results
+
+    except Exception as e:
+        print e
+        return "NOT OK"
+
+
+def all_movies_data(today_date):
+    try:
+        d = handler.mysql.connect()
+        cursor = d.cursor()
+        query = "SELECT movie_details.movie_name,movie_theater.movie_id,theaters.theater_name,theaters.theater_number,movie_theater.show_timing, movie_theater.screen_id,movie_theater.release_date,movie_theater.end_date, movie_details.popularity_index" \
+                " FROM movie_details JOIN movie_theater ON movie_details.movie_id=movie_theater.movie_id JOIN theaters ON movie_theater.theater_number=theaters.theater_number " \
+                "WHERE movie_theater.release_date <= %s AND movie_theater.end_date >= %s"
+        cursor.execute(query, (today_date, today_date))
+        results = cursor.fetchall()
+        ans = []
+        results_list = list(results)
+        for r in results_list:
+            l = list(r)
+            l[4] = str(l[4])
+            l[6] = str(l[6])
+            l[7] = str(l[7])
+            r = tuple(l)
+            ans.append(r)
+        results = tuple(ans)
+        # print (results)
+        return results
+
+    except Exception as e:
+        print e
+        return "NOT OK"

@@ -10,7 +10,6 @@ from celery import Celery
 from celery.schedules import crontab
 from utils import utils
 import analytics.analyze
-import model.models
 
 app = Flask(__name__)
 app.logger.disabled = False
@@ -186,11 +185,11 @@ def add_new_user():
         return bad_request(password)
 
     controllers.control.add_new_user(login_id, password)
-    data, popular_data, flag = controllers.control.admin_control(login_id)
+    data, popular_data, flag = controllers.control.admin_control(login_id, True)
     if flag == 1:
         return render_template('addmovie.html', data_theater=data)
     else:
-        return render_template('movielist.html', data_movie=data, popular_movie= popular_data, login=login_id)
+        return render_template('popularmovielist.html', data_movie=data, popular_movie= popular_data, login=login_id)
 
 
 @app.route("/bookMovie", methods=["GET", "POST"])
@@ -285,11 +284,11 @@ def login():
     result = controllers.control.check_login(login_id)
 
     if login_id == result[0][0] and password == result[0][1]:
-        data, popular_data, flag = controllers.control.admin_control(login_id)
+        data, recommended_data, flag = controllers.control.admin_control(login_id, False)
         if flag == 1:
             return render_template('addmovie.html', data_theater=data)
         else:
-            return render_template('movielist.html', data_movie=data, popular_movie=popular_data, login=login_id)
+            return render_template('recommendedmovielist.html', data_movie=data, recommended_movie=recommended_data, login=login_id)
     else:
         error = 'Invalid Login ID or password'
         return render_template('signIn.html', error=error)

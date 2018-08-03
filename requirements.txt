@@ -3,3 +3,6 @@ flask-mysql
 flask_mail
 Flask-RQ2
 celery
+pandas
+scikit-learn
+scipy
